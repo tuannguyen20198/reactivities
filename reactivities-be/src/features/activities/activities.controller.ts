@@ -19,21 +19,23 @@ import { ActivityQueryDto } from './dto/activity-query.dto';
 
 @Controller('activities')
 export class ActivitiesController {
-  constructor(private readonly activitiesService: ActivitiesService) {}
+  constructor(private readonly activitiesService: ActivitiesService) { }
 
   @Post()
   create(
     @Body() createActivityDto: CreateActivityDto,
-    @User() { id }: RequestUser,
+    // @User() { id }: RequestUser,
   ) {
+    const id = '211373d4-93ee-48cd-ab43-cf090d968a93';
     return this.activitiesService.create(createActivityDto, id);
   }
 
   @Get()
-  async findAll(@User() user: RequestUser, @Query() query: ActivityQueryDto) {
-    // return this.activitiesService.findAll(user.id, query);
-    return this.activitiesService.findAllTmp();
+  async findAll(@Query() query: ActivityQueryDto) {
+    const userId = '211373d4-93ee-48cd-ab43-cf090d968a93'; // hardcoded user
+    return this.activitiesService.findAll(userId, query);
   }
+
 
   @HttpCode(HttpStatus.OK)
   @Post(':id/attend')

@@ -3,20 +3,10 @@ import ActivityDetailsHeader from "./ActivityDetailsHeader";
 import ActivityDetailsChat from "./ActivityDetailsChat";
 import ActivityDetailsInfo from "./ActivityDetailsInfo";
 import ActivityDetailsSidebar from "./ActivityDetailsSidebar";
+import { useActivityDetails } from "@/hook/useActivityDetails";
 
 export default function ActivityDetailPage() {
-  const activity: Activity | undefined = {
-    id: "1",
-    title: "Activity 1",
-    date: new Date("2021-01-01"),
-    description: "Description 1",
-    category: "Category 1",
-    city: "City 1",
-    venue: "Venue 1",
-    isCanceled: false,
-    latitude: 1,
-    longitude: 1,
-  };
+  const { data: activity } = useActivityDetails();
   const isLoadingActivity = false;
 
   if (isLoadingActivity) return <Typography>Loading...</Typography>;

@@ -1,0 +1,12 @@
+# node modules
+node_modules/
+**/node_modules/
+**/.turbo/
+# build output
+dist/
+build/
+.out/
+
+# env files
+*.env
+*.env.local

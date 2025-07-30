@@ -1,9 +1,10 @@
+import { useCreateActivity } from "@/hook/useCreateActivity";
 import { Box, Button, Paper, TextField, Typography } from "@mui/material";
 import { useState } from "react";
-
+import { toast } from 'react-toastify';
 type Props = {};
 
-export default function ActivityForm({}: Props) {
+export default function ActivityForm({ }: Props) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -13,6 +14,8 @@ export default function ActivityForm({}: Props) {
     venue: "",
   });
 
+  const { mutate, isPending } = useCreateActivity(); // ✅
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -20,6 +23,21 @@ export default function ActivityForm({}: Props) {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const { title, description, category, date, city, venue } = formData;
+
+
+    mutate({
+      title,
+      description,
+      category,
+      date: new Date(date).toISOString(),
+      city,
+      venue,
+      latitude: 21.0278, // hoặc bạn thêm input cho người dùng nhập
+      longitude: 105.8342,
+    });
+
   };
 
   return (
@@ -75,8 +93,13 @@ export default function ActivityForm({}: Props) {
         />
         <Box display="flex" justifyContent="end" gap={3}>
           <Button color="inherit">Cancel</Button>
-          <Button type="submit" color="success" variant="contained">
-            Submit
+          <Button
+            type="submit"
+            color="success"
+            variant="contained"
+            disabled={isPending}
+          >
+            {isPending ? "Submitting..." : "Submit"}
           </Button>
         </Box>
       </Box>

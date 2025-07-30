@@ -22,14 +22,17 @@
     "dayjs": "^1.11.13",
     "if-else-cli": "^0.3.0",
     "lodash": "^4.17.21",
+    "path": "^0.12.7",
     "react": "^19.0.0",
     "react-calendar": "^5.1.0",
     "react-dom": "^19.0.0",
-    "react-router": "^7.3.0"
+    "react-router": "^7.3.0",
+    "react-toastify": "^11.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@types/lodash": "^4.17.20",
+    "@types/node": "^20.19.9",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react-swc": "^3.8.0",

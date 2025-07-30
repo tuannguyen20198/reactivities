@@ -1,12 +1,11 @@
 import {
-    useState,
-    useEffect,
     useCallback,
+    useEffect,
     useMemo,
     useRef,
+    useState,
 } from 'react';
-import { useFetchingData } from './useFetchingData';
-import { fetchActivities } from '../../api/activityApi';
+import { useFetchingActivities } from './useFetchingActivities';
 
 const PAGE_SIZE = 2;
 const THRESHOLD = 50;
@@ -16,45 +15,57 @@ export const useLazyLoadPage = () => {
         data: allActivities = [],
         isFetching,
         error,
-    } = useFetchingData<Activity[]>(['activities'], fetchActivities);
+    } = useFetchingActivities();
 
-    const [offset, setOffset] = useState(PAGE_SIZE); // ⚠️ khởi tạo luôn 1 PAGE
+    const [offset, setOffset] = useState(PAGE_SIZE);
     const [hasMore, setHasMore] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+    const autoLoadTriggeredRef = useRef(false);
     const mountedRef = useRef(true);
-
-    // Reset khi dữ liệu thay đổi (VD: chuyển trang)
+    // Reset khi dữ liệu thay đổi
     useEffect(() => {
-        setOffset(PAGE_SIZE); // reset lại đúng PAGE_SIZE
+        setOffset(PAGE_SIZE);
         setHasMore(true);
         setIsLoadingMore(false);
+        autoLoadTriggeredRef.current = false;
     }, [allActivities]);
 
     const visibleActivities = useMemo(() => {
         return allActivities.slice(0, offset);
     }, [allActivities, offset]);
 
+    // const loadMore = useCallback(() => {
+    //     if (!hasMore || isFetching || isLoadingMore) return;
+
+    //     setIsLoadingMore(true);
+
+    //     const newOffset = Math.min(offset + PAGE_SIZE, allActivities.length);
+    //     setOffset(newOffset);
+    //     setIsLoadingMore(false);
+
+    //     if (newOffset >= allActivities.length) {
+    //         setHasMore(false);
+    //     }
+    // }, [offset, hasMore, isFetching, isLoadingMore, allActivities.length]);
     const loadMore = useCallback(() => {
         if (!hasMore || isFetching || isLoadingMore) return;
 
+        console.log("👣 Load more triggered");
         setIsLoadingMore(true);
 
-        setOffset((prev) => {
-            const newOffset = Math.min(prev + PAGE_SIZE, allActivities.length);
-            if (newOffset >= allActivities.length) {
-                setHasMore(false);
-            }
-            return newOffset;
-        });
+        const nextOffset = Math.min(offset + PAGE_SIZE, allActivities.length);
+        const reachedEnd = nextOffset >= allActivities.length;
 
+        // Delay cho hiệu ứng loading
         setTimeout(() => {
-            if (mountedRef.current) {
-                setIsLoadingMore(false);
-            }
-        }, 1000); // delay nhẹ để tránh flicker
-    }, [hasMore, isFetching, isLoadingMore, offset, allActivities.length]);
+            if (!mountedRef.current) return;
 
+            setOffset(nextOffset);
+            setHasMore(!reachedEnd);
+            setIsLoadingMore(false); // ✅ Chỉ set lại sau khi offset update
+        }, 500); // delay vừa đủ cho loading spinner hiển thị
+    }, [hasMore, isFetching, isLoadingMore, offset, allActivities.length]);
     // Scroll trigger
     useEffect(() => {
         const handleScroll = () => {
@@ -65,30 +76,26 @@ export const useLazyLoadPage = () => {
         };
 
         window.addEventListener('scroll', handleScroll);
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
+        return () => window.removeEventListener('scroll', handleScroll);
     }, [loadMore]);
 
-    // Auto load nếu nội dung chưa đủ để scroll
-    useEffect(() => {
-        if (
+    // Auto-load nếu nội dung quá ít
+    const shouldAutoLoad = useMemo(() => {
+        return (
             hasMore &&
             !isFetching &&
             !isLoadingMore &&
-            document.body.scrollHeight <= window.innerHeight
-        ) {
+            document.body.scrollHeight <= window.innerHeight &&
+            !autoLoadTriggeredRef.current
+        );
+    }, [hasMore, isFetching, isLoadingMore, visibleActivities.length]);
+
+    useEffect(() => {
+        if (shouldAutoLoad) {
+            autoLoadTriggeredRef.current = true;
             loadMore();
         }
-    }, [hasMore, isFetching, isLoadingMore, visibleActivities.length, loadMore]);
-
-    // Cleanup
-    useEffect(() => {
-        mountedRef.current = true;
-        return () => {
-            mountedRef.current = false;
-        };
-    }, []);
+    }, [shouldAutoLoad, loadMore]);
 
     return {
         isFetching,

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
@@ -16,7 +17,7 @@ import { ActivityQueryDto } from './dto/activity-query.dto';
 
 @Injectable()
 export class ActivitiesService {
-  constructor(private readonly db: PrismaService) {}
+  constructor(private readonly db: PrismaService) { }
 
   //
   findAllTmp() {
@@ -29,23 +30,47 @@ export class ActivitiesService {
     });
   }
 
-  create(createActivityDto: CreateActivityDto, userId: string) {
-    return this.db.activity.create({
-      data: {
-        ...createActivityDto,
-        attendees: {
-          create: {
-            userId,
-            isHost: true,
+  async create(createActivityDto: CreateActivityDto, userId: string) {
+    try {
+      return await this.db.activity.create({
+        data: {
+          ...createActivityDto,
+          date: new Date(createActivityDto.date),
+          attendees: {
+            create: {
+              userId,
+              isHost: true,
+            },
           },
+          hostId: userId,
         },
-        hostId: userId,
-      },
-    });
+      });
+    } catch (err) {
+      console.error('🔥 LỖI Prisma:', err); // 👈 cái này sẽ in ra lỗi thật sự
+      throw new InternalServerErrorException((err as any).message);
+    }
   }
 
-  async findAll(observerId: string, query: ActivityQueryDto) {
-    return this.findAllPaginated(observerId, query);
+  async findAll(userId: string, query: ActivityQueryDto) {
+    try {
+      const activities = await this.db.activity.findMany({
+        orderBy: { createdAt: 'desc' },
+        include: {
+          attendees: {
+            include: {
+              user: true,
+            },
+          },
+          host: true,
+        },
+      });
+
+      console.log('✅ Activities fetched:', activities.length);
+      return activities;
+    } catch (error) {
+      console.error('🔥 Prisma findAll ERROR:', JSON.stringify(error, null, 2));
+      throw new InternalServerErrorException(error ?? 'Unknown error');
+    }
   }
 
   async findAllPaginated(observerId: string, params: ActivityQueryDto) {

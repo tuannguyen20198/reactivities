@@ -11,6 +11,17 @@ type Activity = {
   latitude: number;
   longitude: number;
   date: Date | string;
+  hostId: string
+};
+type CreateActivityInput = {
+  title: string;
+  description: string;
+  category: string;
+  city: string;
+  venue: string;
+  date: string | Date;
+  latitude: number;
+  longitude: number;
 };
 type UseFetchingDataResult<T> = {
   data: T | undefined;

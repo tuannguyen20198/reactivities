@@ -6,6 +6,7 @@ type Props = {
 };
 
 export default function ActivityList({ activities }: Props) {
+  console.log(activities)
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {activities?.map((activity) => (
